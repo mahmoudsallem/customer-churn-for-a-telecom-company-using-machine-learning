@@ -1,0 +1,55 @@
+# Telco Customer Churn Prediction
+
+This project aims to predict customer churn for a telecom company using machine learning.
+
+## Dataset
+
+The project uses the Telco Customer Churn dataset, which is publicly available. You can find the dataset on Kaggle. The dataset contains information about customers, including demographics, services subscribed to, and churn status.
+
+## Libraries
+
+The following libraries are used in this project:
+
+- pandas
+- numpy
+- seaborn
+- scikit-learn
+- imblearn
+- dataprep
+- pycaret
+
+## Preprocessing
+
+The following preprocessing steps are performed:
+
+- Drop the customerID column
+- Map categorical features to numerical values
+- Handle imbalanced classes using oversampling
+- Split the data into training and testing sets
+- Scale numerical features using StandardScaler
+
+## Model Training and Evaluation
+
+Several machine learning models are trained and evaluated, including:
+
+- Logistic Regression
+- K-Nearest Neighbors
+- Decision Tree
+- Random Forest
+- XGBoost
+- Support Vector Machine
+
+The models are compared using various metrics, such as accuracy, precision, recall, F1-score, and Fbeta-score. PyCaret is also used for automated machine learning, including model selection and hyperparameter tuning.
+
+## Results
+
+The results of the model training and evaluation are presented in the notebook. The best-performing model is selected based on the evaluation metrics.
+
+## Usage
+
+To run this project, you will need to:
+
+- Install the required libraries
+- Download the Telco Customer Churn dataset
+- Upload the dataset to your Google Colab environment
+- Run the code in the notebook
