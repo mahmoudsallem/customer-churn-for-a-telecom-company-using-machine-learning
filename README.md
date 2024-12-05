@@ -99,3 +99,11 @@ To run this project, you will need to:
 
     uvicorn app:app --reload
 
+## Usage example
+
+-   **I am a female who is not a senior citizen. I am not married and have no dependents. I have been a customer for 2 months with a tenure of 2 months. I have phone service but no dual phone service. I have Fiber optic internet service with no online security or online backup. I do not have device protection or tech support. I do not stream TV or movies. My contract is Month-to-Month, and I have paperless billing. I have paid a monthly charge of 70.70 and a total charge of 151.65. My payment method is electronic check.**
+
+-    **I am a male who is a senior citizen. I am married and have no dependents. I have been a customer for 4 months with a tenure of 4 months. I have phone service and dual phone service. I have Fiber optic internet service with no online security or online backup. I do not have device protection or tech support. I do not stream TV or movies. My contract is Month-to-Month, and I have paperless billing. I have paid a monthly charge of 74.40 and a total charge of 306.6. My payment method is mailed check.**
+
+
+
