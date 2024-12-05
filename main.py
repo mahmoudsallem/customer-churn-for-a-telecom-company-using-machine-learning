@@ -156,13 +156,7 @@ if user_input := st.chat_input("Enter your query here..."):
 
     with st.chat_message("assistant"):
         try:
-            # Correct formatting
-            prompt = PromptTemplate(
-            template="You are a chatbot. Extract the features from the text and respond in the following JSON format.  The JSON should be a single object, not an array of objects:\n{user_input}\n{format_instructions}",
-            input_variables=['text'],
-            partial_variables={"format_instructions": format_instructions}
-            )       
-            
+           
             # Invoke the chain
             response = chain.invoke([HumanMessage(content=user_input)])
 
