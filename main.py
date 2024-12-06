@@ -12,11 +12,17 @@ from langchain.prompts import PromptTemplate
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 from langchain_core.messages import HumanMessage
 from langchain_community.llms import Ollama
+from langchain.chains import ConversationChain
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain_community.llms import Ollama
 
 
 # Set up Streamlit app title
 st.title("ChatGPT-like Clone for Sequential Data Collection")
 
+# Schema for structured response
+# Define the schema using Pydantic
 # Schema for structured response
 class Info(BaseModel):
     gender: str = Field(description="Valid answers are 'Male', 'Female'", required=True)
@@ -39,27 +45,100 @@ class Info(BaseModel):
     Monthly_Charges: float = Field(description="Provide a numeric value (e.g., '59.99')", required=True)
     Total_Charges: float = Field(description="Provide a numeric value (e.g., '500.75')", required=True)
 
-
 # Create a Pydantic output parser
 parser = JsonOutputParser(pydantic_object=Info)
 
-# Get the format instructions
-format_instructions = parser.get_format_instructions()
+format_instructions = """
+Please provide the output in the following JSON structure:
+{
+  "gender": "",
+  "Senior_Citizen": "",
+  "Is_Married": "",
+  "Dependents": "",
+  "tenure": "",
+  "Phone_Service": "",
+  "Dual": "",
+  "Internet_Service": "",
+  "Online_Security": "",
+  "Online_Backup": "",
+  "Device_Protection": "",
+  "Tech_Support": "",
+  "Streaming_TV": "",
+  "Streaming_Movies": "",
+  "Contract": "",
+  "Paperless_Billing": "",
+  "Payment_Method": "",
+  "Monthly_Charges": "",
+  "Total_Charges": ""
+}
+"""
 
 # Define the template for the prompt
-template = "You are a chatbot. Extract the features from the text and respond in the following JSON format.  The JSON should be a single object, not an array of objects:\n{text}\n{format_instructions}"
+# Define the template
+template = """
+You are a chatbot designed to extract specific features from user-provided text and respond in JSON format. 
+The JSON should be a single object, not an array of objects.
 
+Conversation so far:
+{history}
+
+User input:
+{text}
+
+Tasks:
+1. Extract the following features from the provided text: 
+   - gender
+   - Senior_Citizen
+   - Is_Married
+   - Dependents
+   - tenure
+   - Phone_Service
+   - Dual
+   - Internet_Service
+   - Online_Security
+   - Online_Backup
+   - Device_Protection
+   - Tech_Support
+   - Streaming_TV
+   - Streaming_Movies
+   - Contract
+   - Paperless_Billing
+   - Payment_Method
+   - Monthly_Charges
+   - Total_Charges
+
+2. Check if any of the above features are missing from the provided data. If any feature is missing:
+   - Explicitly ask the user to provide the missing feature(s).
+   - Only show the JSON data when all required features are provided. If the data is incomplete, do not output the JSON and instead ask for the missing data.
+   - Once the user provides the missing feature(s), add it to the previously extracted data and display the updated JSON.
+
+Output Format:
+{format_instructions}
+"""
+
+# Create the PromptTemplate with history and text as input variables
 prompt = PromptTemplate(
     template=template,
-    input_variables=['text'],
-    partial_variables={"format_instructions": format_instructions}
+    input_variables=["history", "text"],  # Include history and input
+    partial_variables={"format_instructions": format_instructions}  # Static placeholder value
 )
+
 
 # Initialize the LLM
 llm  = Ollama(model="llama3")
 
-chain = prompt|llm
+memory = ConversationBufferMemory(return_messages=True)
 
+
+# Create a ConversationChain
+conversation = ConversationChain(
+    llm=llm,
+    memory=memory,
+    prompt=prompt,
+    input_key="text",  # Explicitly set the key for user input
+)
+
+chain = conversation
 
 # load the ML model
 ML_model = load_model('My_Best_Pipeline')
@@ -156,25 +235,28 @@ if user_input := st.chat_input("Enter your query here..."):
 
     with st.chat_message("assistant"):
         try:
-           
             # Invoke the chain
-            response = chain.invoke([HumanMessage(content=user_input)])
+            response = chain.run(user_input)
+            try:
+                output = parser.invoke(response)
+                
+                df = pd.DataFrame([output])
+                
+                df.rename(columns={"Senior_Citizen": "Senior_Citizen "}, inplace=True)
 
-            output = parser.invoke(response)
-            
-            df = pd.DataFrame([output])
-            
-            df.rename(columns={"Senior_Citizen": "Senior_Citizen "}, inplace=True)
+                churn_prediction = ml_model(df.iloc[[-1]])
+                df.loc[len(df) - 1, "Churn"] = churn_prediction[0]
 
-            churn_prediction = ml_model(df.iloc[[-1]])
-            df.loc[len(df) - 1, "Churn"] = churn_prediction[0]
-
-            # Display the response
-            st.markdown(response)
-            st.write(df)
+                # Display the response
+                st.markdown(response)
+                st.write(df)
+            except Exception as e:
+                # Handle any errors in the ML model prediction
+                error_message = f"There are missing value : {str(e)}"
+                st.markdown(error_message)
+                st.session_state.messages.append({"role": "assistant", "content": error_message})
         except Exception as e:
             # Handle any errors
-            error_message = f"An error occurred: {str(e)}"
+            error_message = f"An error occurred: {str(e)} please add this information"
             st.markdown(error_message)
             st.session_state.messages.append({"role": "assistant", "content": error_message})
-
