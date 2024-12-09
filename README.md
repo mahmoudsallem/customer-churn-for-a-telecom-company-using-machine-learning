@@ -63,14 +63,17 @@ document-chatbot/
 ├── EDA data/
 │   ├── EDA-report.html # EDA report dashboard
 │   └──EDA-report.mp4     # EDA-report video
+│
 │       
 │── FastApi/
 │       ├── app.py         # FastAPI routes
 │       ├── My_Best_Pipeline.pkl  # The Model of ML 
+|       ├── Dockerfile      # Dockerfile can use to staret the FastApi app in versual env
 │       └── utails.py    
 │
 ├── frontend/
 │   ├── main.py               # Streamlit application
+|   ├── FasrApi/Dockerfile    # Dockerfile can use to staret the streamlit app in versual env 
 │   ├── My_Best_Pipeline.pkl  # The Model of ML 
 │   └── utails.py     
 │             
