@@ -106,6 +106,11 @@ if st.session_state.missing_features:
         st.session_state.response_data[field] = user_input
         st.session_state.missing_features.pop(0)
         # Refresh the app
+        
+if st.session_state.response_data:
+    if st.button("Show ML Prediction"):
+        st.write( ML_model(st.session_state.response_data))
+
 
 # Display all collected data and provide options to save or exit
 if st.session_state.response_data and not st.session_state.missing_features:

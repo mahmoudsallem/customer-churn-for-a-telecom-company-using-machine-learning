@@ -56,16 +56,31 @@ The models are compared using various metrics, such as accuracy, precision, reca
 
 The results of the model training and evaluation are presented in the notebook. The best-performing model is selected based on the evaluation metrics.
 
-## Usage
+## Project Structure
 
-To run this project, you will need to:
+# FastAPI routes
 
-- Install the required libraries
-- Download the Telco Customer Churn dataset
-- Upload the dataset to your Google Colab environment
-- Run the code in the notebook
-
-
+```plaintext
+document-chatbot/
+├── EDA data/
+│   ├── EDA-report.html # EDA report dashboard
+│   │   └──EDA-report.mp4     # EDA-report video    
+│── FastApi/
+│       ├── app.py         # FastAPI routes
+│       ├── My_Best_Pipeline.pkl  # The Model of ML 
+│       └── utails.py    
+├── frontend/
+│   ├── app.py               # Streamlit application
+│   └── components/
+│       ├── chat_interface.py    # Streamlit chat interface
+│       ├── document_uploader.py # File upload handling
+│       └── model_selector.py    # Model selector
+├── Dockerfile 
+├── Customer_Churn.ipynb # The Notebook 
+├── WA_Fn-UseC_-Telco-Customer-Churn.csv     # The data set what i worked 
+├── README.md
+└── requirements.txt # The requirements of the project libraries
+```
 ## Project Structure
 
 - `main.py`: The main application file containing the Streamlit app and chatbot logic.
@@ -75,6 +90,14 @@ To run this project, you will need to:
 - `requirements.txt`: A file containing the required libraries and their versions.
 
 
+## Usage
+
+To run this project, you will need to:
+
+- Install the required libraries
+- Download the Telco Customer Churn dataset
+- Upload the dataset to your Google Colab environment
+- Run the code in the notebook
 
 ## Installation
 

@@ -67,7 +67,7 @@ def LLM_model():
     ConversationChain: A ConversationChain object initialized with the specified language model, memory, prompt, and input key.
     """
 
-        # Define the template
+    # Define the template
     template = """
     You are a chatbot designed to extract specific features from user-provided text, validate the data, and save it in a JSON file. 
     Follow a step-by-step approach to ensure all required features are extracted accurately, leveraging memory to retain previously collected data.
@@ -97,6 +97,7 @@ def LLM_model():
     4. **Verify Completeness**:
     - Ensure the JSON object is valid and complete.
     - Respond to the user with the updated JSON object once all required fields are filled.
+    
 
     ### Output Format:
     {format_instructions}
