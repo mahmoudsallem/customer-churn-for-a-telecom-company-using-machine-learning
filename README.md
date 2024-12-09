@@ -64,17 +64,18 @@ The results of the model training and evaluation are presented in the notebook. 
 document-chatbot/
 ├── EDA data/
 │   ├── EDA-report.html # EDA report dashboard
-│   │   └──EDA-report.mp4     # EDA-report video    
+│   └──EDA-report.mp4     # EDA-report video
+│       
 │── FastApi/
 │       ├── app.py         # FastAPI routes
 │       ├── My_Best_Pipeline.pkl  # The Model of ML 
 │       └── utails.py    
+│
 ├── frontend/
-│   ├── app.py               # Streamlit application
-│   └── components/
-│       ├── chat_interface.py    # Streamlit chat interface
-│       ├── document_uploader.py # File upload handling
-│       └── model_selector.py    # Model selector
+│   ├── main.py               # Streamlit application
+│   ├── My_Best_Pipeline.pkl  # The Model of ML 
+│   └── utails.py     
+│             
 ├── Dockerfile 
 ├── Customer_Churn.ipynb # The Notebook 
 ├── WA_Fn-UseC_-Telco-Customer-Churn.csv     # The data set what i worked 
