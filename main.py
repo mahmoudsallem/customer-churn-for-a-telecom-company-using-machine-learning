@@ -1,4 +1,5 @@
 import re
+import json
 import pandas as pd
 import streamlit as st
 from langchain_ollama import OllamaLLM
@@ -14,249 +15,108 @@ from langchain_core.messages import HumanMessage
 from langchain_community.llms import Ollama
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
-from langchain_community.llms import Ollama
+from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory
+from utails import parse , LLM_model , ML_model
 
+# Define the Pydantic model for the JSON data
+parser = parse()
+# Initialize the Large language Model
+conversation = LLM_model()
 
-# Set up Streamlit app title
-st.title("ChatGPT-like Clone for Sequential Data Collection")
+def update_json(data, file_path="customer_data.json"):
+    """
+    This function saves the provided data to a JSON file.
 
-# Schema for structured response
-# Define the schema using Pydantic
-# Schema for structured response
-class Info(BaseModel):
-    gender: str = Field(description="Valid answers are 'Male', 'Female'", required=True)
-    Senior_Citizen: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Is_Married: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Dependents: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    tenure: float = Field(description="Provide the tenure in months as a numeric value", required=True)
-    Phone_Service: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Dual: str = Field(description="Valid answers are 'Yes', 'No', or 'No phone service'", required=True)
-    Internet_Service: str = Field(description="Valid answers are 'DSL', 'Fiber optic', or 'No'", required=True)
-    Online_Security: str = Field(description="Valid answers are 'Yes', 'No', or 'No internet service'", required=True)
-    Online_Backup: str = Field(description="Valid answers are 'Yes', 'No', or 'No internet service'", required=True)
-    Device_Protection: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Tech_Support: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Streaming_TV: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Streaming_Movies: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Contract: str = Field(description="Valid answers are 'Month-to-Month', 'One Year', or 'Two Year'", required=True)
-    Paperless_Billing: str = Field(description="Valid answers are 'Yes' or 'No'", required=True)
-    Payment_Method: str = Field(description="Valid answers include 'Credit Card', 'Bank Transfer', 'Electronic Check', or 'Mailed Check'", required=True)
-    Monthly_Charges: float = Field(description="Provide a numeric value (e.g., '59.99')", required=True)
-    Total_Charges: float = Field(description="Provide a numeric value (e.g., '500.75')", required=True)
+    Parameters:
+    data (dict): The data to be saved in JSON format.
+    file_path (str, optional): The path of the JSON file. Defaults to "customer_data.json".
 
-# Create a Pydantic output parser
-parser = JsonOutputParser(pydantic_object=Info)
+    Returns:
+    None
 
-format_instructions = """
-Please provide the output in the following JSON structure:
-{
-  "gender": "",
-  "Senior_Citizen": "",
-  "Is_Married": "",
-  "Dependents": "",
-  "tenure": "",
-  "Phone_Service": "",
-  "Dual": "",
-  "Internet_Service": "",
-  "Online_Security": "",
-  "Online_Backup": "",
-  "Device_Protection": "",
-  "Tech_Support": "",
-  "Streaming_TV": "",
-  "Streaming_Movies": "",
-  "Contract": "",
-  "Paperless_Billing": "",
-  "Payment_Method": "",
-  "Monthly_Charges": "",
-  "Total_Charges": ""
-}
-"""
+    This function attempts to open the specified file in write mode and write the provided data to it.
+    If the file cannot be opened or written to, an error message is displayed using Streamlit's error function.
+    """
+    try:
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
+        st.success(f"Data saved to {file_path}")
+    except Exception as e:
+        st.error(f"Error saving data: {e}")
 
-# Define the template for the prompt
-# Define the template
-template = """
-You are a chatbot designed to extract specific features from user-provided text and respond in JSON format. 
-The JSON should be a single object, not an array of objects.
+# Required fields for the JSON object
+required_fields = [
+    "gender", "Senior_Citizen", "Is_Married", "Dependents", "tenure", "Phone_Service", 
+    "Dual", "Internet_Service", "Online_Security", "Online_Backup", "Device_Protection", 
+    "Tech_Support", "Streaming_TV", "Streaming_Movies", "Contract", "Paperless_Billing", 
+    "Payment_Method", "Monthly_Charges", "Total_Charges"
+]
 
-Conversation so far:
-{history}
-
-User input:
-{text}
-
-Tasks:
-1. Extract the following features from the provided text: 
-   - gender
-   - Senior_Citizen
-   - Is_Married
-   - Dependents
-   - tenure
-   - Phone_Service
-   - Dual
-   - Internet_Service
-   - Online_Security
-   - Online_Backup
-   - Device_Protection
-   - Tech_Support
-   - Streaming_TV
-   - Streaming_Movies
-   - Contract
-   - Paperless_Billing
-   - Payment_Method
-   - Monthly_Charges
-   - Total_Charges
-
-2. Check if any of the above features are missing from the provided data. If any feature is missing:
-   - Explicitly ask the user to provide the missing feature(s).
-   - Only show the JSON data when all required features are provided. If the data is incomplete, do not output the JSON and instead ask for the missing data.
-   - Once the user provides the missing feature(s), add it to the previously extracted data and display the updated JSON.
-
-Output Format:
-{format_instructions}
-"""
-
-# Create the PromptTemplate with history and text as input variables
-prompt = PromptTemplate(
-    template=template,
-    input_variables=["history", "text"],  # Include history and input
-    partial_variables={"format_instructions": format_instructions}  # Static placeholder value
-)
-
-
-# Initialize the LLM
-llm  = Ollama(model="llama3")
-
-memory = ConversationBufferMemory(return_messages=True)
-
-
-# Create a ConversationChain
-conversation = ConversationChain(
-    llm=llm,
-    memory=memory,
-    prompt=prompt,
-    input_key="text",  # Explicitly set the key for user input
-)
-
-chain = conversation
-
-# load the ML model
-ML_model = load_model('My_Best_Pipeline')
-
-
-# Convert the template into a ChatPromptTemplate
-prompt_template = ChatPromptTemplate.from_template(template)
-
-# Initialize session state for messages and responses
+# Ensure session state variables are initialized
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "responses" not in st.session_state:
     st.session_state.responses = []
+if "response_data" not in st.session_state:
+    st.session_state.response_data = {}
+if "missing_features" not in st.session_state:
+    st.session_state.missing_features = []
 
-def encode_df(df):
-    df['Dependents'] = df['Dependents'].map({'Yes': 1, 'No': 0})
-    df['gender'] = df['gender'].map({'Male': 1, 'Female': 0})
-    df['Is_Married'] = df['Is_Married'].map({'Yes': 1, 'No': 0})
-    df['Senior_Citizen '] = df['Senior_Citizen '].map({'Yes': 1, 'No': 0})
-    for column in df.select_dtypes(include=['object']).columns:
-        df[column] = LabelEncoder().fit_transform(df[column])
-    return df
+# Streamlit App
+st.title("ChatGPT-like Interface")
+st.write("Interact with the chatbot to extract features and save them to a JSON file.")
 
-def encode_df(df):
-    """
-    This function encodes categorical variables in the input dataframe.
-
-    Parameters:
-    df (pandas.DataFrame): The input dataframe containing customer data. The dataframe should have the following categorical columns:
-        'Dependents', 'gender', 'Is_Married', 'Senior_Citizen'.
-
-    Returns:
-    pandas.DataFrame: The input dataframe with categorical columns encoded using binary mapping for 'Dependents', 'gender', 'Is_Married', 'Senior_Citizen'
-    and label encoding for other categorical columns.
-    """
-    df['Dependents'] = df['Dependents'].map({'Yes': 1, 'No': 0})
-    df['gender'] = df['gender'].map({'Male': 1, 'Female': 0})
-    df['Is_Married'] = df['Is_Married'].map({'Yes': 1, 'No': 0})
-    df['Senior_Citizen '] = df['Senior_Citizen '].map({'Yes': 1, 'No': 0})
-    for column in df.select_dtypes(include=['object']).columns:
-        df[column] = LabelEncoder().fit_transform(df[column])
-    return df
-
-
-def scale_df(df):
-    """
-    This function scales the numerical columns in the input dataframe using the StandardScaler.
-
-    Parameters:
-    df (pandas.DataFrame): The input dataframe containing customer data. The dataframe should have the following numerical columns:
-        'tenure', 'Monthly_Charges', 'Total_Charges'.
-
-    Returns:
-    pandas.DataFrame: The input dataframe with the numerical columns scaled using StandardScaler.
-    """
-    scaler = StandardScaler()
-    numerical_columns = ["tenure", 'Monthly_Charges', 'Total_Charges']
-    df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
-    return df
-
-
-def ml_model(df):
-    """
-    This function preprocesses the input dataframe, encodes categorical variables, scales numerical variables,
-    and then makes a prediction using a pre-trained machine learning model.
-
-    Parameters:
-    df (pandas.DataFrame): The input dataframe containing customer data. The dataframe should have the following columns:
-        'gender', 'Senior_Citizen', 'Is_Married', 'Dependents', 'tenure', 'Phone_Service', 'Dual', 'Internet_Service',
-        'Online_Security', 'Online_Backup', 'Device_Protection', 'Tech_Support', 'Streaming_TV', 'Streaming_Movies',
-        'Contract', 'Paperless_Billing', 'Payment_Method', 'Monthly_Charges', 'Total_Charges'.
-
-    Returns:
-    numpy.ndarray: A 1D array containing the predicted churn values for the input customers.
-    """
-    df = encode_df(df)
-    df = scale_df(df)
-    return ML_model.predict(df)
-
-
-# Display chat messages from history
+# Display chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Accept user input
+# Check if there's a user input
 if user_input := st.chat_input("Enter your query here..."):
-    # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": user_input})
-    
-    # Display user message
     with st.chat_message("user"):
         st.markdown(user_input)
 
+    # Get assistant's response
+    response = conversation.run({"text": user_input})
+    st.markdown(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
-        try:
-            # Invoke the chain
-            response = chain.run(user_input)
-            try:
-                output = parser.invoke(response)
-                
-                df = pd.DataFrame([output])
-                
-                df.rename(columns={"Senior_Citizen": "Senior_Citizen "}, inplace=True)
+        st.markdown(response)
 
-                churn_prediction = ml_model(df.iloc[[-1]])
-                df.loc[len(df) - 1, "Churn"] = churn_prediction[0]
+    try:
+        # Parse the response
+        response_data = parser.invoke(response)
+        st.session_state.response_data.update(response_data)
 
-                # Display the response
-                st.markdown(response)
-                st.write(df)
-            except Exception as e:
-                # Handle any errors in the ML model prediction
-                error_message = f"There are missing value : {str(e)}"
-                st.markdown(error_message)
-                st.session_state.messages.append({"role": "assistant", "content": error_message})
-        except Exception as e:
-            # Handle any errors
-            error_message = f"An error occurred: {str(e)} please add this information"
-            st.markdown(error_message)
-            st.session_state.messages.append({"role": "assistant", "content": error_message})
+        # Identify missing fields
+        st.session_state.missing_features = [field for field in response_data if response_data.get(field) in [None, "", "Unknown"]]
+
+        if st.session_state.missing_features:
+            st.info(f"Missing fields: {', '.join(st.session_state.missing_features)}")
+
+    except json.JSONDecodeError as e:
+        st.error(f"Could not extract information from the response. Please try again. Error: {e}")
+
+# Handle missing data input
+if st.session_state.missing_features:
+    field = st.session_state.missing_features[0]
+    user_input = st.text_input(f"Please provide a value for '{field}':", key=f"input_{field}")
+    if user_input:
+        st.session_state.response_data[field] = user_input
+        st.session_state.missing_features.pop(0)
+        # Refresh the app
+
+# Display all collected data and provide options to save or exit
+if st.session_state.response_data and not st.session_state.missing_features:
+    st.success("All required data collected!")
+    if st.button("Show JSON"):
+        st.json(st.session_state.response_data)
+    if st.button("Save Data and Exit"):
+        update_json(st.session_state.response_data)
+        # Save previous messages before resetting session state
+        previous_messages = st.session_state.messages.copy()
+        st.session_state.messages = previous_messages  # Preserve previous messages
+        st.session_state.response_data = {}
+        st.session_state.missing_features = []
+        # Refresh the app
