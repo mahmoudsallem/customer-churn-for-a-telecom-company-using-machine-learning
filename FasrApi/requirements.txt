@@ -1,0 +1,10 @@
+pycaret[full]
+dataprep
+streamlit
+langchain-core
+langchain
+scikit-learn
+joblib
+fastapi
+uvicorn
+langchain_experimental
