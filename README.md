@@ -58,8 +58,6 @@ The results of the model training and evaluation are presented in the notebook. 
 
 ## Project Structure
 
-# FastAPI routes
-
 ```plaintext
 document-chatbot/
 ├── EDA data/
