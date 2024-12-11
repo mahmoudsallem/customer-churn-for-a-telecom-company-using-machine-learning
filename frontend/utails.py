@@ -180,52 +180,46 @@ def ML_model(data):
         Returns: 
         pandas.DataFrame: A DataFrame containing the preprocessed customer data and the predicted churn value. 
     """    
-        try:
-            df = pd.DataFrame([data])
-            df.rename(columns={"Senior_Citizen": "Senior_Citizen "}, inplace=True)
+        # try:
+        df = pd.DataFrame([data])
+        df.rename(columns={"Senior_Citizen": "Senior_Citizen "}, inplace=True)
 
-            # Check for missing columns before accessing them.  Handle missing data gracefully.
-            required_cols = ['Dependents', 'gender', 'Is_Married', 'Senior_Citizen ', 'tenure', 'Phone_Service', 
-                                'Dual', 'Internet_Service', 'Online_Security', 'Online_Backup', 'Device_Protection',
-                                'Tech_Support', 'Streaming_TV', 'Streaming_Movies', 'Contract', 'Paperless_Billing', 
-                                'Payment_Method', 'Monthly_Charges', 'Total_Charges']
-            missing_cols = set(required_cols) - set(df.columns)
-            if missing_cols:
-                st.error(f"Error: The following columns are missing from the LLM's output: {missing_cols}. Please check the LLM's response and ensure all necessary data is provided.")
-                return None # Or handle the missing data appropriately, e.g., imputation
+        # Check for missing columns before accessing them.  Handle missing data gracefully.
+        required_cols = ['Dependents', 'gender', 'Is_Married', 'Senior_Citizen ', 'tenure', 'Phone_Service', 
+                            'Dual', 'Internet_Service', 'Online_Security', 'Online_Backup', 'Device_Protection',
+                            'Tech_Support', 'Streaming_TV', 'Streaming_Movies', 'Contract', 'Paperless_Billing', 
+                            'Payment_Method', 'Monthly_Charges', 'Total_Charges']
+        # missing_cols = set(required_cols) - set(df.columns)
 
-            # Map and encode categorical features; handle potential errors
-            mapping = {
-                'Dependents': {'Yes': 1, 'No': 0},
-                'gender': {'Male': 1, 'Female': 0},
-                'Is_Married': {'Yes': 1, 'No': 0},
-                'Senior_Citizen ': {'Yes': 1, 'No': 0}
-            }
-            for col, mp in mapping.items():
-                try:
-                    df[col] = df[col].map(mp).fillna(0) # Fill NaN values with 0 if mapping fails
-                except KeyError as e:
-                    st.error(f"Error mapping values for column '{col}': {e}. Check the LLM's output for valid values.")
-                    return None
+        mapping = {
+            'Dependents': {'Yes': 1, 'No': 0},
+            'gender': {'Male': 1, 'Female': 0},
+            'Is_Married': {'Yes': 1, 'No': 0},
+            'Senior_Citizen ': {'Yes': 1, 'No': 0}
+        }
+        for col, mp in mapping.items():
+            try:
+                df[col] = df[col].map(mp).fillna(0) # Fill NaN values with 0 if mapping fails
+            except KeyError as e:
+                st.error(f"Error mapping values for column '{col}': {e}. Check the LLM's output for valid values.")
+                return None
 
-            for column in df.select_dtypes(include=['object']).columns:
-                try:
-                    df[column] = LabelEncoder().fit_transform(df[column])
-                except ValueError as e:
-                    st.error(f"Error encoding column '{column}': {e}. Check for unexpected values in the LLM's output.")
-                    return None
+        for column in df.select_dtypes(include=['object']).columns:
+            try:
+                df[column] = LabelEncoder().fit_transform(df[column])
+            except ValueError as e:
+                st.error(f"Error encoding column '{column}': {e}. Check for unexpected values in the LLM's output.")
+                return None
 
 
-            scaler = StandardScaler()
-            numerical_columns = ["tenure", 'Monthly_Charges', 'Total_Charges']
-            df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
+        scaler = StandardScaler()
+        numerical_columns = ["tenure", 'Monthly_Charges', 'Total_Charges']
+        df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
 
-            ML_Model = load_model('My_Best_Pipeline')
-            churn_prediction = ML_Model.predict(df.iloc[[-1]])
-            df.loc[len(df) - 1, "Churn"] = churn_prediction[0]
-            return df
-        except Exception as e:
-            st.exception(f"An error occurred in the ML model: {e}")
-            return None
-
-
+        ML_Model = load_model('My_Best_Pipeline')
+        churn_prediction = ML_Model.predict(df.iloc[[-1]])
+        df.loc[len(df) - 1, "Churn"] = churn_prediction[0]
+        return df
+        # except Exception as e:
+        #     st.exception(f"An error occurred in the ML model: {e}")
+        #     return None

@@ -1,21 +1,5 @@
-import re
 import json
-import pandas as pd
 import streamlit as st
-from langchain_ollama import OllamaLLM
-from pycaret.classification import *
-from langchain_core.prompts import ChatPromptTemplate
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from pydantic import BaseModel, Field
-from langchain.output_parsers import PydanticOutputParser 
-from langchain_core.output_parsers import JsonOutputParser
-from langchain.prompts import PromptTemplate
-from langchain_experimental.llms.ollama_functions import OllamaFunctions
-from langchain_core.messages import HumanMessage
-from langchain_community.llms import Ollama
-from langchain.chains import ConversationChain
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory
 from utails import parse , LLM_model , ML_model
 
 # Define the Pydantic model for the JSON data

@@ -1,10 +1,12 @@
 pycaret[full]
 dataprep
-streamlit
+fastapi
+uvicorn
 langchain-core
 langchain
 scikit-learn
 joblib
 fastapi
+json
 uvicorn
 langchain_experimental
