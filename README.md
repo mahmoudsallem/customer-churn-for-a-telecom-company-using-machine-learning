@@ -2,6 +2,8 @@
 
 This project aims to predict customer churn for a telecom company using machine learning develop chatbot to extract data from the text and classify it into churn or not.
 
+https://github.com/user-attachments/assets/db771dbd-a12a-4049-b9c5-1d4160b98a71
+
 ## Dataset
 
 The project uses the Telco Customer Churn dataset, which is publicly available. You can find the dataset on Kaggle. The dataset contains information about customers, including demographics, services subscribed to, and churn status.
